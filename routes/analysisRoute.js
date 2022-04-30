@@ -3,6 +3,7 @@ const Prediction = require("../models/PredictionModel")
 const router = require("express").Router()
 const multer = require('multer')
 var jwt = require('jsonwebtoken');
+const { TrainServiceUrl, PredictServiceUrl } = require("../helpers/appConstants");
 
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -94,7 +95,7 @@ router.post("/get-prediction", async (req, res) => {
 
         const response = await axios({
             method: "post",
-            url: "http://localhost:8000/predict",
+            url: `${PredictServiceUrl}/predict`,
             data: r_api_data_object,
             headers: { "Content-Type": "application/json" },
         })
@@ -174,7 +175,7 @@ router.post("/get-multiple-prediction", async (req,res) => {
 
         const response = await axios({
             method: "post",
-            url: "http://localhost:8000/predict-multiple",
+            url: `${PredictServiceUrl}/predict-multiple`,
             data: request_data_object,
             headers: { "Content-Type": "application/json" },
         })
@@ -287,7 +288,7 @@ router.post("/new-analysis", upload.array("images"), async (req, res) => {
     
     console.log(categoric_variable_names)
 
-    axios.post("http://localhost:8000/train", { data, dependent_variable, numeric_variables, categoric_variables, analysis_code, categoric_variable_names })
+    axios.post(`${TrainServiceUrl}/train`, { data, dependent_variable, numeric_variables, categoric_variables, analysis_code, categoric_variable_names })
 
     try {
         const newPrediction = new Prediction(
