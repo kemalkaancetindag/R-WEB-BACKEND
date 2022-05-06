@@ -2,6 +2,8 @@ const { default: axios } = require("axios")
 const Prediction = require("../models/PredictionModel")
 const router = require("express").Router()
 const multer = require('multer')
+const XLSX = require('xlsx')
+const fs = require('fs')
 var jwt = require('jsonwebtoken');
 const { TrainServiceUrl, PredictServiceUrl } = require("../helpers/appConstants");
 
@@ -123,8 +125,8 @@ router.post("/get-prediction", async (req, res) => {
 
 
 
-        console.log("bura")
-        console.log(response_predictions_list)
+        
+        
         res.json(response_predictions_list)
 
     } catch (e) {
@@ -141,6 +143,7 @@ router.post("/get-multiple-prediction", async (req,res) => {
     var request_data_object = {}
     var prediction_categories = []
     var response_object = {}
+    var wb_matrix = []
 
     
 
@@ -182,15 +185,31 @@ router.post("/get-multiple-prediction", async (req,res) => {
 
         response_object["analysis"] = analysis
         response_object["predictions"] = JSON.parse(response.data[0])
-        console.log(response_object)
+        var wb = XLSX.utils.book_new()
+        wb.SheetNames.push('predictions')
+        
+        JSON.parse(response.data[0]).forEach((pred) => {
+            if(wb_matrix.length === 0) {
+                wb_matrix.push(Object.keys(pred))
+            }
+            var temp_list = []            
+            for (var key of Object.keys(pred)) {
+                temp_list.push(pred[key])
+            }
+            wb_matrix.push(temp_list)
+
+        })
+        var ws = XLSX.utils.aoa_to_sheet(wb_matrix)
+        wb.Sheets['predictions'] = ws
+        XLSX.writeFile(wb, `${process.cwd()}/prediction_files/${analysis.analysis_code}.xlsx`);
+        
         return res.json(response_object)
                                            
     }   
     catch(e){
         console.log(e)
     }
-    
-    
+        
 
     
     
@@ -317,5 +336,11 @@ router.post("/new-analysis", upload.array("images"), async (req, res) => {
 
 
 })
+
+router.get('/download', (req, res) => {
+    const {analysis_code} = req.query
+    const file = `${process.cwd()}/prediction_files/${analysis_code}.xlsx`;    
+    res.download(file,`${analysis_code}.xlsx`); 
+  });
 
 module.exports = router

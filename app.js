@@ -13,7 +13,7 @@ var bodyParser = require('body-parser');
 
 
 
-mongoose.connect("mongodb://mongodb:27017/RDB", { useNewUrlParser: true , useUnifiedTopology: true });
+mongoose.connect("mongodb://localhost:27017/RDB", { useNewUrlParser: true , useUnifiedTopology: true });
 
 const connection = mongoose.connection;
 
